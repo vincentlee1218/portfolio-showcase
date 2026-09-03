@@ -3,7 +3,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 /* =========================================================
    CONFIG — the stuff you'll actually want to tweak
    ========================================================= */
-const NAME = "YOUR NAME";      // <-- put whatever name/text you want spelled out
+const NAME = "VINCENT LEE";    // <-- put whatever name/text you want spelled out
 const FONT = "bold 200px Arial";
 const PARTICLE_GAP = 4;        // sample every N px from the text bitmap (lower = denser + slower)
 const PARTICLE_SIZE = 2.2;
