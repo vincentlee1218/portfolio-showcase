@@ -11,8 +11,16 @@ const PARTICLE_COLOR = 0xffffff;
 
 const MOUSE_RADIUS = 60;       // world-unit radius where the mouse pushes particles
 const REPEL_STRENGTH = 26;     // how hard particles get pushed away
-const RETURN_SPEED = 0.05;     // how eagerly particles pull back to their home position
+const RETURN_SPEED = 0.05;     // how eagerly particles pull back toward their target
 const DAMPING = 0.9;           // velocity decay per frame (higher = floatier)
+
+const EDGE_SPAWN_MARGIN = 60;  // how far past the visible edge particles start from
+const INTRO_DURATION = 2.2;    // seconds each particle takes to fly from its edge start to home
+const INTRO_STAGGER = 0.6;     // random extra delay (0 to this many seconds) before a particle starts flying in, for an organic arrival
+const WANDER_SPEED_MIN = 0.4;  // idle-motion speed range (radians/sec-ish, randomized per particle)
+const WANDER_SPEED_MAX = 1.1;
+const WANDER_AMPLITUDE_MIN = 1.5; // idle-motion radius range, in world units — keep small so the shape stays readable
+const WANDER_AMPLITUDE_MAX = 3.5;
 
 /* ========================================================= */
 
@@ -84,17 +92,65 @@ if (count === 0) {
 }
 
 const positions = new Float32Array(count * 3);
+const spawnPositions = new Float32Array(count * 3); // untouched copy of the edge-start positions, used as the lerp origin during intro
 const homePositions = new Float32Array(count * 3);
 const velocities = new Float32Array(count * 3);
 
+// per-particle idle-wander parameters, so the gathered shape keeps drifting
+const wanderPhaseX = new Float32Array(count);
+const wanderPhaseY = new Float32Array(count);
+const wanderSpeed = new Float32Array(count);
+const wanderAmp = new Float32Array(count);
+const introDelay = new Float32Array(count); // random per-particle head start delay, for a staggered arrival
+
+// where particles fly in from — a random point just past one of the
+// four viewport edges, computed at the particle plane's distance (z=0)
+function randomEdgeStartPosition() {
+  const vFov = (camera.fov * Math.PI) / 180;
+  const dist = camera.position.z;
+  const halfHeight = Math.tan(vFov / 2) * dist;
+  const halfWidth = halfHeight * camera.aspect;
+
+  const edge = Math.floor(Math.random() * 4); // 0 top, 1 bottom, 2 left, 3 right
+  const reach = 200; // how far beyond the edge they can start (adds variety/depth)
+  let x, y;
+
+  if (edge === 0) {
+    x = (Math.random() * 2 - 1) * (halfWidth + reach);
+    y = halfHeight + EDGE_SPAWN_MARGIN + Math.random() * reach;
+  } else if (edge === 1) {
+    x = (Math.random() * 2 - 1) * (halfWidth + reach);
+    y = -halfHeight - EDGE_SPAWN_MARGIN - Math.random() * reach;
+  } else if (edge === 2) {
+    x = -halfWidth - EDGE_SPAWN_MARGIN - Math.random() * reach;
+    y = (Math.random() * 2 - 1) * (halfHeight + reach);
+  } else {
+    x = halfWidth + EDGE_SPAWN_MARGIN + Math.random() * reach;
+    y = (Math.random() * 2 - 1) * (halfHeight + reach);
+  }
+
+  return new THREE.Vector3(x, y, (Math.random() - 0.5) * 80);
+}
+
 for (let i = 0; i < count; i++) {
-  const p = targetPoints[i];
-  positions[i * 3] = p.x;
-  positions[i * 3 + 1] = p.y;
-  positions[i * 3 + 2] = p.z;
-  homePositions[i * 3] = p.x;
-  homePositions[i * 3 + 1] = p.y;
-  homePositions[i * 3 + 2] = p.z;
+  const home = targetPoints[i];
+  homePositions[i * 3] = home.x;
+  homePositions[i * 3 + 1] = home.y;
+  homePositions[i * 3 + 2] = home.z;
+
+  const start = randomEdgeStartPosition();
+  positions[i * 3] = start.x;
+  positions[i * 3 + 1] = start.y;
+  positions[i * 3 + 2] = start.z;
+  spawnPositions[i * 3] = start.x;
+  spawnPositions[i * 3 + 1] = start.y;
+  spawnPositions[i * 3 + 2] = start.z;
+
+  wanderPhaseX[i] = Math.random() * Math.PI * 2;
+  wanderPhaseY[i] = Math.random() * Math.PI * 2;
+  wanderSpeed[i] = WANDER_SPEED_MIN + Math.random() * (WANDER_SPEED_MAX - WANDER_SPEED_MIN);
+  wanderAmp[i] = WANDER_AMPLITUDE_MIN + Math.random() * (WANDER_AMPLITUDE_MAX - WANDER_AMPLITUDE_MIN);
+  introDelay[i] = Math.random() * INTRO_STAGGER;
 }
 
 const geometry = new THREE.BufferGeometry();
@@ -137,6 +193,7 @@ const mouseNDC = new THREE.Vector2(9999, 9999);
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const mouseWorld = new THREE.Vector3();
 let mouseActive = false;
+const clock = new THREE.Clock();
 
 heroSection.addEventListener("mousemove", (e) => {
   const rect = heroSection.getBoundingClientRect();
@@ -156,6 +213,8 @@ heroSection.addEventListener("mouseleave", () => {
 function animate() {
   requestAnimationFrame(animate);
 
+  const t = clock.getElapsedTime();
+
   if (mouseActive) {
     raycaster.setFromCamera(mouseNDC, camera);
     raycaster.ray.intersectPlane(groundPlane, mouseWorld);
@@ -169,6 +228,29 @@ function animate() {
     const iy = i * 3 + 1;
     const iz = i * 3 + 2;
 
+    // the shape keeps its form, but each particle idly drifts around
+    // its home position so the whole thing feels alive, not static
+    const driftX = Math.sin(t * wanderSpeed[i] + wanderPhaseX[i]) * wanderAmp[i];
+    const driftY = Math.cos(t * wanderSpeed[i] + wanderPhaseY[i]) * wanderAmp[i];
+    const targetX = homePositions[ix] + driftX;
+    const targetY = homePositions[iy] + driftY;
+
+    // 0 -> 1 over INTRO_DURATION seconds, starting after this particle's random stagger delay
+    const introProgress = Math.min(Math.max((t - introDelay[i]) / INTRO_DURATION, 0), 1);
+
+    if (introProgress < 1) {
+      // explicit eased flight from the edge spawn point to home — guaranteed to be
+      // slow enough to see, regardless of the spring constants used once it arrives
+      const eased = 1 - Math.pow(1 - introProgress, 3); // ease-out cubic
+      arr[ix] = spawnPositions[ix] + (targetX - spawnPositions[ix]) * eased;
+      arr[iy] = spawnPositions[iy] + (targetY - spawnPositions[iy]) * eased;
+      arr[iz] = spawnPositions[iz] + (homePositions[iz] - spawnPositions[iz]) * eased;
+      velocities[ix] = 0;
+      velocities[iy] = 0;
+      velocities[iz] = 0;
+      continue;
+    }
+
     if (mouseActive) {
       const dx = arr[ix] - mouseWorld.x;
       const dy = arr[iy] - mouseWorld.y;
@@ -181,9 +263,9 @@ function animate() {
       }
     }
 
-    // spring back toward home position
-    velocities[ix] += (homePositions[ix] - arr[ix]) * RETURN_SPEED;
-    velocities[iy] += (homePositions[iy] - arr[iy]) * RETURN_SPEED;
+    // spring back toward the (drifting) target
+    velocities[ix] += (targetX - arr[ix]) * RETURN_SPEED;
+    velocities[iy] += (targetY - arr[iy]) * RETURN_SPEED;
     velocities[iz] += (homePositions[iz] - arr[iz]) * RETURN_SPEED;
 
     // damping
