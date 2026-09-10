@@ -32,9 +32,41 @@
   </section>
 
   <section id="contact" class="section">
-    <h2>Contact</h2>
+    <div class="contact-container">
+      <div class="contact-heading">
+        <p class="section-label">Get in touch</p>
+        <h2>Let’s work together.</h2>
+        <p>Have a project or opportunity in mind? Send me a message and I’ll get back to you.</p>
+      </div>
+
+      <form id="contact-form" class="contact-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="user-name">Name</label>
+            <input id="user-name" name="user_name" type="text" autocomplete="name" required />
+          </div>
+          <div class="form-field">
+            <label for="user-email">Email</label>
+            <input id="user-email" name="user_email" type="email" autocomplete="email" required />
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="subject">Subject</label>
+          <input id="subject" name="subject" type="text" required />
+        </div>
+        <div class="form-field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="7" required></textarea>
+        </div>
+        <button class="submit-button" type="submit">
+          <span class="button-label">Send message</span>
+        </button>
+        <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module" src="main.js"></script>
 </body>
 </html>
