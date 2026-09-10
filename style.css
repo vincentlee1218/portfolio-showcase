@@ -4,8 +4,9 @@
   box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
+html,
+body {
+  min-height: 100%;
   background: #0a0a0a;
   color: #f2f2f2;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -22,6 +23,12 @@ html {
   width: 100%;
   background: #0a0a0a;
   border-bottom: 1px solid #202020;
+  transition: transform 220ms ease;
+  will-change: transform;
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
 }
 
 .navbar {

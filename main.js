@@ -30,6 +30,16 @@ const WANDER_AMPLITUDE_MAX = 3.5;
 
 const heroSection = document.getElementById("hero");
 const canvas = document.getElementById("particle-canvas");
+const siteHeader = document.querySelector(".site-header");
+
+let previousScrollY = window.scrollY;
+window.addEventListener("scroll", () => {
+  const currentScrollY = window.scrollY;
+  const scrollingDown = currentScrollY > previousScrollY;
+
+  siteHeader.classList.toggle("is-hidden", scrollingDown && currentScrollY > siteHeader.offsetHeight);
+  previousScrollY = currentScrollY;
+}, { passive: true });
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
