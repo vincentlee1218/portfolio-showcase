@@ -6,7 +6,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 const NAME = "VINCENT LEE";    // <-- put whatever name/text you want spelled out
 const FONT = "bold 200px Arial";
 const PARTICLE_GAP = 4;        // sample every N px from the text bitmap (lower = denser + slower)
-const PARTICLE_SIZE = 2.2;
+const PARTICLE_SIZE = 1.8;     // dot diameter in screen pixels
 const PARTICLE_COLOR = 0xffffff;
 
 const MOUSE_RADIUS = 60;       // world-unit radius where the mouse pushes particles
@@ -15,8 +15,8 @@ const RETURN_SPEED = 0.05;     // how eagerly particles pull back toward their t
 const DAMPING = 0.9;           // velocity decay per frame (higher = floatier)
 
 const EDGE_SPAWN_MARGIN = 60;  // how far past the visible edge particles start from
-const INTRO_DURATION = 2.2;    // seconds each particle takes to fly from its edge start to home
-const INTRO_STAGGER = 0.6;     // random extra delay (0 to this many seconds) before a particle starts flying in, for an organic arrival
+const INTRO_DURATION = 1.2;    // seconds each particle takes to fly from its edge start to home
+const INTRO_STAGGER = 0.25;    // short random delay keeps the arrival organic without slowing down the reveal
 const WANDER_SPEED_MIN = 0.4;  // idle-motion speed range (radians/sec-ish, randomized per particle)
 const WANDER_SPEED_MAX = 1.1;
 const WANDER_AMPLITUDE_MIN = 1.5; // idle-motion radius range, in world units — keep small so the shape stays readable
@@ -197,6 +197,7 @@ function makeCircleTexture() {
 
 const material = new THREE.PointsMaterial({
   size: PARTICLE_SIZE,
+  sizeAttenuation: false,
   color: PARTICLE_COLOR,
   map: makeCircleTexture(),
   transparent: true,
