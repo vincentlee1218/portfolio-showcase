@@ -48,9 +48,115 @@ html {
   transition: color 180ms ease;
 }
 
-.navbar a:hover,
-.navbar a:focus-visible {
-  color: #ffffff;
+.navbar a:hover {
+  color: #fff;
+}
+
+/* Desktop navigation */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Hamburger is hidden on desktop */
+.menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 2px;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+/*
+ * Collapse the navigation when the header becomes
+ * too narrow for the full navigation.
+ */
+@media (max-width: 800px) {
+  .navbar {
+    min-height: 64px;
+    padding: 0 20px;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+
+    background: #0a0a0a;
+    border-bottom: 1px solid #202020;
+
+    /* Closed state */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+      max-height 220ms ease,
+      opacity 180ms ease,
+      visibility 220ms ease;
+  }
+
+  .nav-menu a {
+    display: block;
+    padding: 16px 20px;
+    border-top: 1px solid #202020;
+  }
+
+  /* Open state */
+  .nav-menu.is-open {
+    max-height: 500px;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Animate hamburger into an X */
+  .menu-toggle.is-open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .menu-toggle.is-open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.is-open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+}
+
+/* Smaller phones */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 16px;
+  }
 }
 
 .nav-brand {

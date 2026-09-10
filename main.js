@@ -397,3 +397,40 @@ window.addEventListener("resize", () => {
   fitCameraToText();
   renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
 });
+
+const menuToggle = document.querySelector('.menu-toggle');
+const navMenu = document.querySelector('.nav-menu');
+
+menuToggle.addEventListener('click', () => {
+  const isOpen = menuToggle.classList.toggle('is-open');
+
+  navMenu.classList.toggle('is-open', isOpen);
+
+  menuToggle.setAttribute('aria-expanded', isOpen);
+  menuToggle.setAttribute(
+    'aria-label',
+    isOpen ? 'Close menu' : 'Open menu'
+  );
+});
+
+// Close the menu after clicking a navigation link.
+navMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    menuToggle.classList.remove('is-open');
+    navMenu.classList.remove('is-open');
+
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'Open menu');
+  });
+});
+
+  // Close the menu if the viewport becomes wide again.
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 800) {
+    menuToggle.classList.remove('is-open');
+    navMenu.classList.remove('is-open');
+
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'Open menu');
+  }
+});
