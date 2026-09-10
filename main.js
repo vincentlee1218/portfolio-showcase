@@ -17,6 +17,10 @@ const DAMPING = 0.9;           // velocity decay per frame (higher = floatier)
 const EDGE_SPAWN_MARGIN = 60;  // how far past the visible edge particles start from
 const INTRO_DURATION = 1.2;    // seconds each particle takes to fly from its edge start to home
 const INTRO_STAGGER = 0.25;    // short random delay keeps the arrival organic without slowing down the reveal
+const CHARGE_PARTICLE_COUNT = 140;
+const CHARGE_PARTICLE_SIZE = 3;
+const CHARGE_DURATION_MIN = 5;
+const CHARGE_DURATION_MAX = 8;
 const WANDER_SPEED_MIN = 0.4;  // idle-motion speed range (radians/sec-ish, randomized per particle)
 const WANDER_SPEED_MAX = 1.1;
 const WANDER_AMPLITUDE_MIN = 1.5; // idle-motion radius range, in world units — keep small so the shape stays readable
@@ -209,7 +213,56 @@ const particles = new THREE.Points(geometry, material);
 scene.add(particles);
 
 /* -----------------------------------------------------------
-   3. Mouse tracking — raycast onto a z=0 plane so we get a
+   3. A continuous stream of small particles that charges into
+      random points in the completed name.
+   ----------------------------------------------------------- */
+const chargePositions = new Float32Array(CHARGE_PARTICLE_COUNT * 3);
+const chargeStarts = new Float32Array(CHARGE_PARTICLE_COUNT * 3);
+const chargeTargets = new Float32Array(CHARGE_PARTICLE_COUNT * 3);
+const chargeStartTimes = new Float32Array(CHARGE_PARTICLE_COUNT);
+const chargeDurations = new Float32Array(CHARGE_PARTICLE_COUNT);
+const chargeGeometry = new THREE.BufferGeometry();
+chargeGeometry.setAttribute("position", new THREE.BufferAttribute(chargePositions, 3));
+
+const chargeMaterial = new THREE.PointsMaterial({
+  size: CHARGE_PARTICLE_SIZE,
+  sizeAttenuation: false,
+  color: PARTICLE_COLOR,
+  map: material.map,
+  transparent: true,
+  opacity: 0.8,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+
+const chargeParticles = new THREE.Points(chargeGeometry, chargeMaterial);
+chargeGeometry.setDrawRange(0, 0);
+scene.add(chargeParticles);
+
+const chargeBeginsAt = INTRO_DURATION + INTRO_STAGGER;
+
+function resetChargeParticle(index, now, initialDelay = 0) {
+  const offset = index * 3;
+  const start = randomEdgeStartPosition();
+  const target = targetPoints[Math.floor(Math.random() * count)];
+
+  chargeStarts[offset] = chargePositions[offset] = start.x;
+  chargeStarts[offset + 1] = chargePositions[offset + 1] = start.y;
+  chargeStarts[offset + 2] = chargePositions[offset + 2] = start.z;
+  chargeTargets[offset] = target.x;
+  chargeTargets[offset + 1] = target.y;
+  chargeTargets[offset + 2] = target.z;
+  chargeStartTimes[index] = now + initialDelay;
+  chargeDurations[index] = CHARGE_DURATION_MIN
+    + Math.random() * (CHARGE_DURATION_MAX - CHARGE_DURATION_MIN);
+}
+
+for (let i = 0; i < CHARGE_PARTICLE_COUNT; i++) {
+  resetChargeParticle(i, chargeBeginsAt, Math.random() * 1.2);
+}
+
+/* -----------------------------------------------------------
+   4. Mouse tracking — raycast onto a z=0 plane so we get a
       world-space position to repel particles from.
    ----------------------------------------------------------- */
 const raycaster = new THREE.Raycaster();
@@ -231,7 +284,7 @@ heroSection.addEventListener("mouseleave", () => {
 });
 
 /* -----------------------------------------------------------
-   4. Animation loop — push particles away from the mouse,
+   5. Animation loop — push particles away from the mouse,
       always spring them back toward their home position.
    ----------------------------------------------------------- */
 function animate() {
@@ -303,6 +356,29 @@ function animate() {
   }
 
   posAttr.needsUpdate = true;
+
+  if (t >= chargeBeginsAt) {
+    chargeGeometry.setDrawRange(0, CHARGE_PARTICLE_COUNT);
+    for (let i = 0; i < CHARGE_PARTICLE_COUNT; i++) {
+      const offset = i * 3;
+      const progress = (t - chargeStartTimes[i]) / chargeDurations[i];
+
+      if (progress < 0) continue;
+      if (progress >= 1) {
+        // Brief random spacing keeps the incoming stream from looking uniform.
+        resetChargeParticle(i, t, Math.random() * 0.45);
+        continue;
+      }
+
+      // Ease-in makes each dot accelerate as it is pulled into the name.
+      const eased = progress * progress;
+      chargePositions[offset] = THREE.MathUtils.lerp(chargeStarts[offset], chargeTargets[offset], eased);
+      chargePositions[offset + 1] = THREE.MathUtils.lerp(chargeStarts[offset + 1], chargeTargets[offset + 1], eased);
+      chargePositions[offset + 2] = THREE.MathUtils.lerp(chargeStarts[offset + 2], chargeTargets[offset + 2], eased);
+    }
+    chargeGeometry.attributes.position.needsUpdate = true;
+  }
+
   renderer.render(scene, camera);
 }
 animate();
