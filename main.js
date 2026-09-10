@@ -1,5 +1,11 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
+const EMAILJS_CONFIG = {
+  publicKey: "YOUR_PUBLIC_KEY",
+  serviceId: "YOUR_SERVICE_ID",
+  templateId: "YOUR_TEMPLATE_ID",
+};
+
 /* =========================================================
    CONFIG — the stuff you'll actually want to tweak
    ========================================================= */
@@ -31,6 +37,46 @@ const WANDER_AMPLITUDE_MAX = 3.5;
 const heroSection = document.getElementById("hero");
 const canvas = document.getElementById("particle-canvas");
 const siteHeader = document.querySelector(".site-header");
+const contactForm = document.getElementById("contact-form");
+const formStatus = document.getElementById("form-status");
+
+contactForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const submitButton = contactForm.querySelector("button[type='submit']");
+  const buttonLabel = submitButton.querySelector(".button-label");
+  const isConfigured = Object.values(EMAILJS_CONFIG).every((value) => !value.startsWith("YOUR_"));
+
+  formStatus.className = "form-status";
+  if (!isConfigured) {
+    formStatus.textContent = "Email is not configured yet. Add the EmailJS IDs in main.js.";
+    formStatus.classList.add("is-error");
+    return;
+  }
+
+  submitButton.disabled = true;
+  buttonLabel.textContent = "Sending…";
+  formStatus.textContent = "Sending your message…";
+
+  try {
+    await window.emailjs.sendForm(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateId,
+      contactForm,
+      { publicKey: EMAILJS_CONFIG.publicKey }
+    );
+    contactForm.reset();
+    formStatus.textContent = "Thanks! Your message has been sent.";
+    formStatus.classList.add("is-success");
+  } catch (error) {
+    console.error("EmailJS send failed:", error);
+    formStatus.textContent = "The message could not be sent. Please try again.";
+    formStatus.classList.add("is-error");
+  } finally {
+    submitButton.disabled = false;
+    buttonLabel.textContent = "Send message";
+  }
+});
 
 let previousScrollY = window.scrollY;
 window.addEventListener("scroll", () => {
