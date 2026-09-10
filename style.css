@@ -16,7 +16,8 @@ html {
 }
 
 .site-header {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 10;
   width: 100%;
   background: #0a0a0a;
@@ -66,6 +67,7 @@ html {
 .section {
   width: 100%;
   min-height: 100vh;
+  scroll-margin-top: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,6 +108,10 @@ html {
 }
 
 @media (max-width: 560px) {
+  .section {
+    scroll-margin-top: 64px;
+  }
+
   .navbar {
     min-height: 64px;
     padding: 0 18px;
