@@ -47,16 +47,19 @@ renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
 function getTextPoints(text) {
   const c = document.createElement("canvas");
   const ctx = c.getContext("2d");
-  c.width = 1024;
-  c.height = 256;
+  ctx.font = FONT;
+  const metrics = ctx.measureText(text);
+  const padding = PARTICLE_GAP * 2;
+  c.width = Math.ceil(metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight + padding * 2);
+  c.height = Math.ceil(metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + padding * 2);
 
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, c.width, c.height);
   ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
   ctx.font = FONT;
-  ctx.fillText(text, c.width / 2, c.height / 2);
+  ctx.fillText(text, padding + metrics.actualBoundingBoxLeft, padding + metrics.actualBoundingBoxAscent);
 
   const imageData = ctx.getImageData(0, 0, c.width, c.height).data;
   const points = [];
@@ -76,11 +79,31 @@ function getTextPoints(text) {
       }
     }
   }
+  if (points.length > 0) {
+    const center = new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3());
+    points.forEach((point) => point.sub(center));
+  }
   return points;
 }
 
 const targetPoints = getTextPoints(NAME);
 const count = targetPoints.length;
+const textSize = new THREE.Box3().setFromPoints(targetPoints).getSize(new THREE.Vector3());
+
+function fitCameraToText() {
+  camera.aspect = heroSection.clientWidth / Math.max(heroSection.clientHeight, 1);
+  const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+  const margin = 2 * (WANDER_AMPLITUDE_MAX + PARTICLE_SIZE);
+  // Keep the complete name within 80% of the viewport in both directions.
+  camera.position.z = Math.max(
+    300,
+    (textSize.x + margin) / (2 * Math.tan(halfFov) * camera.aspect * 0.8),
+    (textSize.y + margin) / (2 * Math.tan(halfFov) * 0.8)
+  );
+  camera.far = camera.position.z + 1000;
+  camera.updateProjectionMatrix();
+}
+fitCameraToText();
 
 console.log(`[particles] hero size: ${heroSection.clientWidth}x${heroSection.clientHeight}`);
 console.log(`[particles] sampled ${count} points for "${NAME}"`);
@@ -284,7 +307,6 @@ function animate() {
 animate();
 
 window.addEventListener("resize", () => {
-  camera.aspect = heroSection.clientWidth / heroSection.clientHeight;
-  camera.updateProjectionMatrix();
+  fitCameraToText();
   renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
 });
