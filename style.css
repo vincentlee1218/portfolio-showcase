@@ -98,6 +98,24 @@ html {
 /* Placeholder sections — replace with real content later */
 #about {
   background: #0a0a0a;
+  padding: 96px 24px;
+}
+
+.about-content {
+  width: min(100%, 720px);
+}
+
+.about-content h2 {
+  margin-bottom: 24px;
+}
+
+.about-content p {
+  color: #b8b8b8;
+  line-height: 1.8;
+}
+
+.about-content p + p {
+  margin-top: 18px;
 }
 
 #projects {
