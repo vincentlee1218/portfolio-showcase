@@ -1,9 +1,9 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
 const EMAILJS_CONFIG = {
-  publicKey: "YOUR_PUBLIC_KEY",
-  serviceId: "YOUR_SERVICE_ID",
-  templateId: "YOUR_TEMPLATE_ID",
+  publicKey: "JvxoHvhiH2Fy65lBq",
+  serviceId: "service_ptsl2x6",
+  templateId: "template_legkyt6",
 };
 
 /* =========================================================
