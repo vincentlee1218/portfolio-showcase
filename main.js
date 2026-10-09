@@ -443,3 +443,52 @@ window.addEventListener("resize", () => {
   fitCameraToText();
   renderer.setSize(heroSection.clientWidth, heroSection.clientHeight);
 });
+
+const navbar = document.getElementById("navbar");
+const hamburger = document.getElementById("hamburger");
+const navLinks = document.getElementById("nav-links");
+
+function setMenuOpen(isOpen) {
+  navbar.classList.toggle("menu-open", isOpen);
+
+  hamburger.setAttribute("aria-expanded", String(isOpen));
+  hamburger.setAttribute(
+    "aria-label",
+    isOpen ? "Close navigation menu" : "Open navigation menu"
+  );
+}
+
+// Toggle the dropdown when the hamburger is clicked
+hamburger.addEventListener("click", () => {
+  const isOpen = hamburger.getAttribute("aria-expanded") === "true";
+  setMenuOpen(!isOpen);
+});
+
+// Close the menu after selecting a navigation link
+navLinks.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    setMenuOpen(false);
+  });
+});
+
+// Close the menu when clicking outside the navigation
+document.addEventListener("click", (event) => {
+  if (!navbar.contains(event.target)) {
+    setMenuOpen(false);
+  }
+});
+
+// Close the menu when Escape is pressed
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    setMenuOpen(false);
+    hamburger.focus();
+  }
+});
+
+// Reset the dropdown when switching back to desktop width
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 1000) {
+    setMenuOpen(false);
+  }
+});
