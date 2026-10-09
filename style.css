@@ -31,9 +31,7 @@ html {
   transform: translateY(-100%);
 }
 
-/* Navigation layout */
 .navbar {
-  position: relative;
   width: min(1100px, 100%);
   min-height: 72px;
   margin: 0 auto;
@@ -42,17 +40,6 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: clamp(18px, 4vw, 40px);
-}
-
-.nav-links a {
-  padding: 12px 0;
-  font-size: 0.95rem;
 }
 
 .navbar a {
@@ -79,115 +66,19 @@ html {
   gap: clamp(18px, 4vw, 40px);
 }
 
-/* Hamburger button: hidden on desktop */
-.hamburger {
-  display: none;
+.nav-links a {
+  padding: 12px 0;
+  font-size: 0.95rem;
+}
+
+.section {
+  width: 100%;
+  min-height: 100vh;
+  scroll-margin-top: 72px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 5px;
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  padding: 9px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.hamburger span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: #fff;
-  border-radius: 2px;
-  transition: transform 200ms ease, opacity 200ms ease;
-}
-
-/* Tablet and mobile dropdown */
-@media (max-width: 999px) {
-  .navbar {
-    flex-wrap: wrap;
-    padding: 0 24px;
-  }
-
-  .hamburger {
-    display: flex;
-    margin-left: auto;
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    width: 100%;
-    padding: 8px 24px 16px;
-
-    background: #0a0a0a;
-    border-bottom: 1px solid #303030;
-    z-index: 20;
-  }
-
-  .navbar.menu-open .nav-links {
-    display: flex;
-  }
-
-  .nav-links a {
-    display: block;
-    padding: 14px 0;
-    border-top: 1px solid #202020;
-    font-size: 0.95rem;
-  }
-
-  /* Animate hamburger into an X */
-  .navbar.menu-open .hamburger span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-  }
-
-  .navbar.menu-open .hamburger span:nth-child(2) {
-    opacity: 0;
-  }
-
-  .navbar.menu-open .hamburger span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-  }
-}
-
-/* Small screens */
-@media (max-width: 560px) {
-  .navbar {
-    min-height: 64px;
-    padding: 0 18px;
-  }
-
-  .nav-brand {
-    font-size: 0.8rem;
-  }
-
-  .nav-links {
-    padding-right: 18px;
-    padding-left: 18px;
-  }
-}
-
-/* Accessibility */
-.hamburger:focus-visible,
-.nav-links a:focus-visible {
-  outline: 2px solid #93c5fd;
-  outline-offset: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hamburger span {
-    transition: none;
-  }
+  position: relative;
 }
 
 /* Hero / particle section */
